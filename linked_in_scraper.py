@@ -7,6 +7,18 @@ from bs4 import BeautifulSoup
 from jinja2 import Template
 import headers
 
+FUNCTION_FACETS = [
+    17,
+    18,
+    14,
+    2,
+    4,
+    20,
+    5,
+    13,
+    12,
+    26,
+]
 
 def download_file(url, local_filename=None):
     if local_filename is None:
@@ -22,10 +34,12 @@ def download_file(url, local_filename=None):
     return local_filename
 
 
-def get_page(company_id, start=0, count=50):
+def get_page(company_id, function_id, start=0, count=50):
+    # facet.FA	17
     params = {
-        'facet': 'CC',
+        'facet': ['CC', 'FA'],
         'facet.CC': company_id,
+        'facet.FA': function_id,
         'count': count,
         'start': start,
     }
@@ -35,21 +49,25 @@ def get_page(company_id, start=0, count=50):
 
 
 def get_company(company_id, outname):
-    count = 50
-    start = 0
-    results = get_page(company_id)
-    total = results['pagination']['total']
-    people = results['searchResults']
-    start += count
-    while start < total:
-        print('getting', start, total)
-        time.sleep(1)
-        results = get_page(company_id, start)
+    people = []
+
+    for function_id in FUNCTION_FACETS:
+        print('getting function', function_id, 'for company', company_id)
+        count = 50
+        start = 0
+        results = get_page(company_id, function_id)
+        total = results['pagination']['total']
         people += results['searchResults']
         start += count
+        while start < total:
+            print('getting', start, 'of', total)
+            time.sleep(1)
+            results = get_page(company_id, function_id, start)
+            people += results['searchResults']
+            start += count
 
-        with open(outname, 'w') as outfile:
-            json.dump(people, outfile, indent=2)
+            with open(outname, 'w') as outfile:
+                json.dump(people, outfile, indent=2)
 
     return outname
 
@@ -145,7 +163,8 @@ def clean_and_parse(datafile, outname):
         #     with open(profile_file, 'r') as profilein:
         #         profile = json.load(profilein)
 
-        out.append(item)
+        if mid not in out:
+            out.append(item)
 
     with open(outname + '.json', 'w') as jsonfile:
         json.dump(out, jsonfile, indent=2)
