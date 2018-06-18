@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from jinja2 import Template
 import headers
 
+# these represent different job functions
 FUNCTION_FACETS = [
     17,
     18,
@@ -21,6 +22,10 @@ FUNCTION_FACETS = [
 ]
 
 def download_file(url, local_filename=None):
+    '''Downloads a file with requests
+    from: https://stackoverflow.com/a/16696317
+    '''
+
     if local_filename is None:
         local_filename = url.split('/')[-1]
 
@@ -35,7 +40,8 @@ def download_file(url, local_filename=None):
 
 
 def get_page(company_id, function_id, start=0, count=50):
-    # facet.FA	17
+    '''Gets a single page of results from linkedin for a particular job function at a company'''
+
     params = {
         'facet': ['CC', 'FA'],
         'facet.CC': company_id,
@@ -49,6 +55,7 @@ def get_page(company_id, function_id, start=0, count=50):
 
 
 def get_company(company_id, outname):
+    '''Gets all employees from a company using particular job functions'''
     people = []
 
     for function_id in FUNCTION_FACETS:
@@ -73,6 +80,8 @@ def get_company(company_id, outname):
 
 
 def get_images(datafile):
+    '''Downloads profile images'''
+
     with open(datafile, 'r') as infile:
         people = json.load(infile)
 
@@ -100,6 +109,8 @@ def get_images(datafile):
 
 
 def get_profile(pid):
+    '''Downloads individual profiles'''
+
     outname = 'profiles/{}.json'.format(pid)
     if os.path.exists(outname):
         return outname
@@ -127,6 +138,8 @@ def get_profile(pid):
 
 
 def get_profiles(datafile):
+    '''Gets all profiles'''
+
     with open(datafile, 'r') as infile:
         data = json.load(infile)
 
@@ -136,6 +149,8 @@ def get_profiles(datafile):
 
 
 def clean_and_parse(datafile, outname):
+    '''Outputs csv, json and html from employee listings'''
+
     out = []
     with open(datafile, 'r') as infile:
         data = json.load(infile)
@@ -157,11 +172,6 @@ def clean_and_parse(datafile, outname):
             'id': d['member']['memberId'],
             'linkedin': 'https://linkedin.com/in/' + pid,
         }
-
-        # profile_file = 'profiles/{}.json'.format(pid)
-        # if os.path.exists(profile_file):
-        #     with open(profile_file, 'r') as profilein:
-        #         profile = json.load(profilein)
 
         if mid not in out:
             out.append(item)
