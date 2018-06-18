@@ -4,6 +4,7 @@ import csv
 import os
 import requests
 from bs4 import BeautifulSoup
+from jinja2 import Template
 import headers
 
 
@@ -150,22 +151,23 @@ def clean_and_parse(datafile, outname):
         json.dump(out, jsonfile, indent=2)
 
     with open(outname + '.csv', 'w') as csvfile:
-        fieldnames = ['name', 'title', 'location', 'url']
+        fieldnames = list(out[0].keys())
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in out:
-            writer.writerow({
-                'name': row['name'],
-                'title': row['title'],
-                'location': row['location'],
-                'url': row['linkedin']
-            })
+            writer.writerow(row)
+
+    with open('template.html', 'r') as templatefile:
+        template = Template(templatefile.read())
+    html = template.render(people=out)
+    with open('index.html', 'w') as htmlout:
+        htmlout.write(html)
 
 
 if __name__ == '__main__':
     ICE = '533534'
     datafile = 'ice_raw.json'
-    # get_company(ICE, datafile)
-    # get_profiles(datafile)
-    # get_images(datafile)
+    get_company(ICE, datafile)
+    get_profiles(datafile)
+    get_images(datafile)
     clean_and_parse(datafile, 'ice')
