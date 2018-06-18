@@ -152,6 +152,7 @@ def clean_and_parse(datafile, outname):
     '''Outputs csv, json and html from employee listings'''
 
     out = []
+    mids = []
     with open(datafile, 'r') as infile:
         data = json.load(infile)
 
@@ -173,8 +174,9 @@ def clean_and_parse(datafile, outname):
             'linkedin': 'https://linkedin.com/in/' + pid,
         }
 
-        if mid not in out:
+        if mid not in mids:
             out.append(item)
+            mids.append(mid)
 
     with open(outname + '.json', 'w') as jsonfile:
         json.dump(out, jsonfile, indent=2)
