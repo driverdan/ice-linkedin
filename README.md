@@ -20,4 +20,8 @@ Next, you'll need to edit `header.py` with info about your linkedin account. Thi
 6. Open up https://curl.trillworks.com/ and paste into the `curl command` area
 7. Copy everything in between `headers = {}` into `header.py`
 
-Run the script with `python linked_in_scraper.py`
+Run the script with 
+
+```
+python linked_in_scraper.py
+```
