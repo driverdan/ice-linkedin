@@ -8,17 +8,33 @@ from jinja2 import Template
 import headers
 
 # these represent different job functions
-FUNCTION_FACETS = [
-    17,
-    18,
-    14,
-    2,
-    4,
-    20,
-    5,
-    13,
-    12,
-    26,
+FUNCTION_FACETS = [17, 18, 14, 2, 4, 20, 5, 13, 12, 26] #FA
+SENIORITY_FACETS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] #SE
+LOCATION_FACETS = [ #G
+    'us:8-2-0-1-2',
+    'us:97',
+    'us:va',
+    'us:dc',
+    'us:tx',
+    'us:ca',
+    'us:md',
+    'us:70',
+    'us:31',
+    'us:ny',
+    'us:8-8-0-8-1',
+    'us:8-8-0-3-1',
+    'us:ga',
+    'us:52',
+    'us:7',
+    'us:8-8-0-95-11',
+    'us:nj',
+    'us:3-2-0-31-1',
+]
+
+FACETS = [
+    ('FA', FUNCTION_FACETS),
+    ('SE', SENIORITY_FACETS),
+    ('G', LOCATION_FACETS)
 ]
 
 def download_file(url, local_filename=None):
@@ -39,16 +55,19 @@ def download_file(url, local_filename=None):
     return local_filename
 
 
-def get_page(company_id, function_id, start=0, count=50):
+def get_page(company_id, facet=None, facet_id=None, start=0, count=50):
     '''Gets a single page of results from linkedin for a particular job function at a company'''
 
     params = {
-        'facet': ['CC', 'FA'],
+        'facet': ['CC'],
         'facet.CC': company_id,
-        'facet.FA': function_id,
         'count': count,
         'start': start,
     }
+
+    if facet is not None and facet_id is not None:
+        params['facet'] = ['CC', facet]
+        params['facet.' + facet] = facet_id
 
     response = requests.get('https://www.linkedin.com/sales/search/results', headers=headers.headers, params=params)
     return response.json()
@@ -58,23 +77,24 @@ def get_company(company_id, outname):
     '''Gets all employees from a company using particular job functions'''
     people = []
 
-    for function_id in FUNCTION_FACETS:
-        print('getting function', function_id, 'for company', company_id)
-        count = 50
-        start = 0
-        results = get_page(company_id, function_id)
-        total = results['pagination']['total']
-        people += results['searchResults']
-        start += count
-        while start < total:
-            print('getting', start, 'of', total)
-            time.sleep(1)
-            results = get_page(company_id, function_id, start)
+    for facet, facet_ids in FACETS:
+        for facet_id in facet_ids:
+            print('getting facet', facet, facet_id, 'for company', company_id)
+            count = 50
+            start = 0
+            results = get_page(company_id, facet, facet_id)
+            total = results['pagination']['total']
             people += results['searchResults']
             start += count
+            while start < total:
+                print('getting', start, 'of', total)
+                time.sleep(1)
+                results = get_page(company_id, facet, facet_id, start)
+                people += results['searchResults']
+                start += count
 
-            with open(outname, 'w') as outfile:
-                json.dump(people, outfile, indent=2)
+                with open(outname, 'w') as outfile:
+                    json.dump(people, outfile, indent=2)
 
     return outname
 
